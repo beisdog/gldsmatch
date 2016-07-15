@@ -3,7 +3,7 @@ package com.beisert.gldsmatch
 class Question {
 
     static constraints = {
-        questionKey unique: true
+        questionKey nullable: false
         title nullable: true, blank:true
         help nullable:true, blank: true
         valueProviderClassName nullable:true
@@ -12,11 +12,13 @@ class Question {
         questionGroup nullable:true //only because it is easier
         optionType nullable:true
         optionFilter nullable:true
+        surveyId nullable: true
     }
 
     String questionKey
     String question
     Integer questionIndex
+
     String help
     String title
     String questionType
@@ -29,6 +31,9 @@ class Question {
     String valueProviderParams
 
     String validatorClassName
+
+    // filled before persist by questionGroup for easier querying
+    Long surveyId
 
     //transient
     List<QuestionAnswer> answersOfUser

@@ -1,0 +1,26 @@
+// Import valo after setting the parameters
+@import "../valo/valo";
+
+.gldsmatch {
+  @include valo;
+
+
+
+  .user-tile {
+    /*display: block;*/
+    overflow: hidden;
+    width: 100px !important;
+    height: 100px;
+    border-radius: 4px;
+    text-align: center;
+    background-color: #197de1;
+    background-image: -webkit-linear-gradient(top, #1b87e3 2%, #166ed5 98%);
+    background-image: linear-gradient(to bottom,#1b87e3 2%, #166ed5 98%);
+    color: white;
+    font-size: 16px;
+    line-height: 44px;
+    /*margin: 19px auto;*/
+    -webkit-box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+  }
+}

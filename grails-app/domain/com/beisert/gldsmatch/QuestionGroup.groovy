@@ -14,5 +14,12 @@ class QuestionGroup {
     String title
     String description
 
+    def beforeInsert(){
+        questions.each {q -> q.surveyId = survey?.id}
+    }
+
+    def beforeUpdate(){
+        questions.each {q -> q.surveyId = survey?.id}
+    }
 
 }

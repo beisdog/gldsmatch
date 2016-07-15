@@ -1,5 +1,7 @@
 package gldsmatch
 
+import app.data.SiteUserData
+import app.view.EditProfileView
 import com.beisert.gldsmatch.Question
 import com.beisert.gldsmatch.QuestionAnswer
 import com.beisert.gldsmatch.QuestionGroup
@@ -8,9 +10,12 @@ import com.beisert.gldsmatch.SecRole
 import com.beisert.gldsmatch.SecUser
 import com.beisert.gldsmatch.SecUserSecRole
 import com.beisert.gldsmatch.Site
+import com.beisert.gldsmatch.SiteMenuItem
 import com.beisert.gldsmatch.SiteUser
 import com.beisert.gldsmatch.Survey
 import com.beisert.gldsmatch.SurveyResponse
+import com.vaadin.grails.Grails
+import gldsmatch.data.SiteUserDataSearchInput
 import grails.compiler.GrailsCompileStatic
 import grails.transaction.Transactional
 import groovy.transform.CompileStatic
@@ -56,86 +61,20 @@ class SiteService {
         return freshSite
     }
 
-    public void setUpData(Site site){
 
-       //Survey
-        Survey survey = new Survey(title: "Profile",site: site )
-        survey.save(flush:true,failOnError:true)
-        site.siteSurvey = survey
-        site.save(flush:true, failOnError: true)
-
-        QuestionGroup gr = new QuestionGroup(title: "Profile Information", survey: survey)
-        survey.addToQuestionGroups(gr)
-        survey.save(flush:true, failOnError: true)
-
-        Question q = new Question(questionIndex:1,questionKey:"firstname",question:"Firstname",questionType:"text",questionGroup: gr)
-        Question q1 = new Question(questionIndex:2,questionKey:"lastname",question:"Lastname",questionType:"text",questionGroup: gr)
-        Question q2 = new Question(questionIndex:3,questionKey:"gender",question:"Gender",questionType:"optionGroup",optionType:"Gender",questionGroup: gr)
-        Question q3 = new Question(questionIndex:4,questionKey:"ward",question:"Ward",questionType:"text",questionGroup: gr)
-        Question q4 = new Question(questionIndex:5,questionKey:"stake",question:"Stake",questionType:"text",questionGroup: gr)
-        Question q5 = new Question(questionIndex:6,questionKey:"country",question:"Country",questionType:"combo", optionType:"Country", questionGroup: gr)
-        Question q6 = new Question(questionIndex:7,questionKey:"birthdate",question:"Birthdate",questionType:"date",questionGroup: gr)
-        Question q7 = new Question(questionIndex:8,questionKey:"vegetarian",question:"Vegetarian",questionType:"checkbox",questionGroup: gr)
-        Question q8 = new Question(questionIndex:9,questionKey:"musicstyles",question:"What are your favorite music styles",questionType:"optionGroup",multipleAllowed: true, optionType:"musicstyles",questionGroup: gr)
-        Question q9 = new Question(questionIndex:10,questionKey:"height",question:"Your height",questionType:"combo",optionType:"height",questionGroup: gr)
-
-
-        gr.addToQuestions(q)
-        gr.addToQuestions(q1)
-        gr.addToQuestions(q2)
-        gr.addToQuestions(q3)
-        gr.addToQuestions(q4)
-        gr.addToQuestions(q5)
-        gr.addToQuestions(q6)
-        gr.addToQuestions(q7)
-        gr.addToQuestions(q8)
-        gr.addToQuestions(q9)
-
-
-        gr.save(flush:true, failOnError: true)
-
-        //Gender
-        new QuestionOption(site:site, optionType: "Gender", optionKey:"M", optionValue: "Male").save(failOnError: true,flush: true)
-        new QuestionOption(site:site, optionType: "Gender", optionKey:"F", optionValue: "Female").save(failOnError: true,flush: true)
-
-        //Country
-        new QuestionOption(site:site, optionType: "Country", optionKey:"CH", optionValue: "Switzerland").save(failOnError: true,flush: true)
-        new QuestionOption(site:site, optionType: "Country", optionKey:"DE", optionValue: "Germany").save(failOnError: true,flush: true)
-        new QuestionOption(site:site, optionType: "Country", optionKey:"UK", optionValue: "United Kingdom").save(failOnError: true,flush: true)
-        new QuestionOption(site:site, optionType: "Country", optionKey:"NL", optionValue: "Netherlands").save(failOnError: true,flush: true)
-
-        //Music styles
-        new QuestionOption(site:site, optionType: "musicstyles", optionKey:"rock", optionValue: "Rock").save(failOnError: true,flush: true)
-        new QuestionOption(site:site, optionType: "musicstyles", optionKey:"pop", optionValue: "Pop").save(failOnError: true,flush: true)
-        new QuestionOption(site:site, optionType: "musicstyles", optionKey:"metal", optionValue: "Metal").save(failOnError: true,flush: true)
-        new QuestionOption(site:site, optionType: "musicstyles", optionKey:"techno", optionValue: "Techno").save(failOnError: true,flush: true)
-
-        //Height
-        for(int i=100;i<220;){
-            new QuestionOption(site:site, optionType: "height", optionKey:i + "_CM", optionValue: i+ "cm").save(failOnError: true,flush: true)
-            i = i + 5
-        }
-
-
-    }
 
     public void saveSurveyResponse(SurveyResponse resp){
-
-        //resp.answersToDelete.each {it.delete(id:it.id)}
-
-        resp.save(flush: true,failOnError: true)
-
-
+         resp.save(flush: true,failOnError: true)
     }
 
 
-        public SurveyResponse getOrCreateProfileSurvey(SecUser user, Site site){
+    public SurveyResponse getOrCreateProfileSurvey(SecUser user, Site site){
         Site s = Site.get(site.id)
 
         SurveyResponse resp = SurveyResponse.findBySurveyAndUser(s.siteSurvey,user)
         Survey survey = s.siteSurvey
         if(resp == null) {
-            resp = new SurveyResponse(survey: survey, user: user)
+            resp = new SurveyResponse(survey: survey, user: user, siteId: site.id)
         }
         //Prefill the answers
         List<Question> questions = getAllQuestionsInSurvey(survey)
@@ -193,8 +132,6 @@ class SiteService {
         }
         return list
     }
-
-
     //Survey must be active in session
     private List<Question> getAllQuestionsInSurvey(Survey s){
         List<Question> result = new ArrayList<Question>()
@@ -206,4 +143,54 @@ class SiteService {
         return result
     }
 
+
+
+    Collection<SiteUserData> findSiteUserDataByQuestionKeyAndStringValueAndSite(String questionKey, String stringValue,Site site){
+
+        List<QuestionAnswer> answers = QuestionAnswer.findAllByQuestionKeyAndStringValueAndSiteIdAndSurveyId(questionKey,stringValue,site.id,site.siteSurveyId)
+        Map<String, SiteUserData> resultMap = new LinkedHashMap<String,SiteUserData>()
+
+        answers.each {a ->
+            SiteUserData userData = resultMap.get(a.userName)
+            if(userData == null) {
+                userData = new SiteUserData(user:a.user,site:site, profile: getOrCreateProfileSurvey(a.user,site))
+                resultMap.put(a.userName, userData)
+            }
+        }
+
+        return resultMap.values()
+
+    }
+
+    Survey getSiteSurvey(Long siteId){
+        Site site = Site.get(siteId)
+        return site.siteSurvey
+    }
+
+    void setUserProfileStringValue(SecUser user,Site site, String questionKey, String stringValue){
+        SurveyResponse resp = getOrCreateProfileSurvey(user, site)
+        QuestionAnswer answer = resp.findAnswerByQuestionKey(questionKey)
+        if(answer == null) {
+
+            Question question = getQuestionBySurveyIdAndQuestionKey(site.siteSurveyId, questionKey)
+            QuestionAnswer answerNew = new QuestionAnswer(question: question, surveyResponse: resp, stringValue: stringValue)
+            resp.addToAnswers(answerNew)
+            saveSurveyResponse(resp)
+        }else{
+            answer.stringValue = stringValue
+            answer.save(failOnError: true, flush: true)
+        }
+
+    }
+
+    Question getQuestionBySurveyIdAndQuestionKey(Long surveyId, String questionKey){
+        return Question.findBySurveyIdAndQuestionKey(surveyId,questionKey)
+    }
+
+    SiteUserData getSiteUserDataByUsernameAndSite(String username, Site site) {
+        SecUser user = SecUser.findByUsername(username)
+        SurveyResponse resp = getOrCreateProfileSurvey(user,site)
+        SiteUserData userData = new SiteUserData(user:user,site:site,profile: resp)
+        return userData
+    }
 }

@@ -6,6 +6,8 @@ class Site {
         title nullable:true
         description nullable:true
         siteSurvey nullable:true
+        parentSite nullable:true
+        siteSurveyId nullable: true
     }
 
     String siteName
@@ -14,4 +16,13 @@ class Site {
 
     Survey siteSurvey
 
+    Long siteSurveyId
+
+    Site parentSite
+
+    static belongsTo = [parentSite:Site]
+
+    static mapping = {
+        siteSurveyId insertable: false, updateable: false
+    }
 }
